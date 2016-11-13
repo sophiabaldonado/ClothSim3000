@@ -53,6 +53,42 @@ function lovr.load()
     end
   end
 
+  updateShader = g.newShader([[
+    in vec3 previousPosition;
+    out vec3 Position;
+    out vec3 PreviousPosition;
+
+    uniform float timestep = 0.05;
+    uniform float damping = 0.1;
+    uniform float spring = 50;
+    uniform float restLength = 1.0;
+    uniform vec3 gravity vec3(0.0, -0.08, 0.0);
+
+    void main() {
+      float mass = 1.0; //should set this attribute uniform
+      vec3 pos = position;
+      vec3 ppos = previousPosition;
+      vec3 vel = (pos - ppos) * damping;
+      F = gravity * mass - damping * vel;
+
+      vec3 delta = q - pos;
+      float point_distance = length(delta);
+      F += -spring * (rest_length - point_distance) * normalize(delta);
+
+      vec3 acc = F / mass;
+      //vec3 displacement = vel * timestep + acc * timestep * timestep;
+      vec3 displacement = vel + acc * timestep * timestep;
+
+      PreviousPosition = position;
+      Position = vec3(pos + displacement);
+    }
+  ]], {
+    feedback = {
+      'Position',
+      'PreviousPosition'
+    }
+  })
+
   shader = g.newShader([[
     in vec2 texCoord;
     out vec2 TexCoord;
@@ -84,8 +120,7 @@ function lovr.load()
 end
 
 function lovr.update(dt)
-
-
+  --
 end
 
 function lovr.draw()
