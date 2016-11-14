@@ -1,6 +1,6 @@
 local g = lovr.graphics
-local width = 40
-local height = 40
+local width = 50
+local height = 50
 local vertices = {}
 local previousPositions = {}
 local connections = {}
@@ -22,10 +22,10 @@ function lovr.load()
 
       table.insert(vertices, {
         x, y, z,
+        x, y, z,
         u, -v
       })
 
-      table.insert(previousPositions, { 0, 0, 0 })
       table.insert(connections, { -1, -1, -1, -1 })
 
       local n = #connections
@@ -62,14 +62,14 @@ function lovr.load()
     uniform float damping = 0.1;
     uniform float spring = 50;
     uniform float restLength = 1.0;
-    uniform vec3 gravity vec3(0.0, -0.08, 0.0);
+    uniform vec3 gravity = vec3(0.0, -0.08, 0.0);
 
     void main() {
       float mass = 1.0; //should set this attribute uniform
       vec3 pos = position;
       vec3 ppos = previousPosition;
       vec3 vel = (pos - ppos) * damping;
-      F = gravity * mass - damping * vel;
+      vec3 F = gravity * mass - damping * vel;
 
       vec3 delta = q - pos;
       float point_distance = length(delta);
@@ -82,12 +82,11 @@ function lovr.load()
       PreviousPosition = position;
       Position = vec3(pos + displacement);
     }
-  ]], {
-    feedback = {
-      'Position',
-      'PreviousPosition'
-    }
-  })
+  ]], [[
+  void main() {
+    color = lovrColor;
+  }
+  ]], { 'Position', 'PreviousPosition' })
 
   shader = g.newShader([[
     in vec2 texCoord;
@@ -109,6 +108,7 @@ function lovr.load()
 
   local format = {
     { 'position', 'float', 3 },
+    { 'previousPosition', 'float', 3 },
     { 'texCoord', 'float', 2 }
   }
 
@@ -120,7 +120,42 @@ function lovr.load()
 end
 
 function lovr.update(dt)
-  --
+
+  --[[ vertices = {
+  {
+    1, 2, 3, -- x, y, z
+    4, 5, 6, -- px, py, pz
+    7, 8 -- u, v
+  },
+  ...
+  }]]
+
+  --[[ transformFeedback = {
+    x, y, z,
+    px, py, pz,
+    x, y, z,
+    px, py, pz,
+    x, y, z,
+    px, py, pz,
+    ...
+  }]]
+
+  -- local data = Buffer:feedback()
+  g.setShader(updateShader)
+  local data = points:feedback()
+  for i = 1, #data, 6 do
+    local x, y, z = data[i], data[i + 1], data[i + 2]
+    local px, py, pz = data[i + 3], data[i + 4], data[i + 5]
+
+    local vertexIndex = math.ceil(i / 6)
+    vertices[vertexIndex] = {
+      x, y, z,
+      px, py, pz,
+      vertices[vertexIndex][7], vertices[vertexIndex][8]
+    }
+  end
+  points:setVertices(vertices)
+  g.setShader(shader)
 end
 
 function lovr.draw()
