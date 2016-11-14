@@ -41,7 +41,7 @@ function lovr.load()
     return x + (y - 1) * width
   end
 
-  for j = 1, height do
+  for j = 1, height - 1 do
     for i = 1, width - 1 do
       table.insert(triangleIndices, index(i, j))
       table.insert(triangleIndices, index(i + 1, j))
