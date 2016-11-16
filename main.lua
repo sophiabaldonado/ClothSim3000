@@ -8,8 +8,8 @@ local triangleIndices = {}
 local points
 
 function lovr.load()
-  local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and .8 or 0
+  local gridSize = lovr.headset.isPresent() and .2 or 2
+  local originY = lovr.headset.isPresent() and 1 or 0
 
   -- TODO 2d table?
   for j = 1, height do
@@ -18,7 +18,7 @@ function lovr.load()
       local u = i / width
       local x = (u - .5) * gridSize
       local y = (v - .5) * gridSize + originY
-      local z = -2
+      local z = 0
 
       table.insert(connections, { -1, -1, -1, -1 })
 
@@ -96,12 +96,13 @@ function lovr.load()
   points:setTexture(texture)
   g.setShader(renderShader)
 
-  controller = { 0, 0, -1 }
+  controller = lovr.headset.getController('left')
 
-  updateShader:send('rayPosition', controller)
+  updateShader:send('rayPosition', { controller:getPosition() })
 end
 
 function lovr.update(dt)
+    --for j = 1, 5 do
   local positions = {}
   for i = 1, #vertices do
     local p = { unpack(vertices[i], 1, 3) }
@@ -112,6 +113,9 @@ function lovr.update(dt)
   local texture = g.newTexture(tex_position)
   texture:bind()
 
+  updateShader:send('timestep', dt)
+  updateShader:send('rayPosition', { controller:getPosition() })
+  updateShader:send('trigger', controller:getAxis('trigger'))
   g.setShader(updateShader)
   local data = points:feedback()
   for i = 1, #data, 6 do
@@ -128,22 +132,11 @@ function lovr.update(dt)
     }
   end
   points:setVertices(vertices)
+  --end
   g.setShader(renderShader)
-
-  t = (t or 0) + dt
-  controller[1] = .5 * math.cos(t)
-  controller[2] = .5 * math.sin(t)
-  if controller[3] > -2 then
-    controller[3] = controller[3] - dt
-  end
-  updateShader:send('rayPosition', controller)
 end
 
 function lovr.draw()
-
-  --[[g.translate(0, 0, -2)
-  g.rotate(math.pi / 2, 0, 1, 0)
-  g.translate(0, 0, 2)]]
 
   -- Draw triangles!
   g.setShader(renderShader)
@@ -162,6 +155,7 @@ function lovr.draw()
   points:setVertexMap()
   --points:draw()
 
+  local x, y, z = controller:getPosition()
   g.setColor(255, 255, 255)
-  g.cube('fill', controller[1], controller[2], controller[3], .3)
+  g.cube('line', x, y, z, .2)
 end
