@@ -18,7 +18,7 @@ uniform vec3 rayPosition;
 //uniform float ciElapsedSeconds;
 
 // Holding trigger on Vive controller or right mouse click
-//uniform bool trigger;
+//uniform float trigger;
 
 // The outputs of the vertex shader are the same as the inputs
 out vec3 tf_position;
@@ -31,13 +31,13 @@ uniform float timestep = 0.05;
 uniform float spring = 50;
 
 // Gravity
-uniform vec3 gravity = vec3(0.0, -0.08, 0.0);
+uniform vec3 gravity = vec3(0.0, -0.02, 0.0);
 
 // Global damping constant
-uniform float damping = .1;
+uniform float damping = .995;
 
 // Spring resting length
-uniform float rest_length = 1.0;
+uniform float rest_length = .035;
 
 vec3 calcRayIntersection( vec3 pos )
 {   // this is for pinching/pulling on cloth with trigger
@@ -70,7 +70,7 @@ vec3 calcRayIntersection( vec3 pos )
 void main(void)
 {
     vec3 pos = position;               // pos can be our position
-    //pos = calcRayIntersection( pos );
+    pos = calcRayIntersection( pos );
     float mass = 1;               // the mass of our vertex, right now is always 1
 
     vec3 old_position = previousPosition; // save the previous position
@@ -98,7 +98,7 @@ void main(void)
     // Accelleration due to force
     vec3 acc = F / mass;
     // Displacement
-    vec3 displacement = vel * timestep + acc * timestep * timestep;
+    vec3 displacement = vel + acc * timestep * timestep;
 
     // Write the outputs
     tf_prev_position = pos;

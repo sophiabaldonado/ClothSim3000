@@ -9,7 +9,7 @@ local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and .8 or .5
+  local originY = lovr.headset.isPresent() and .8 or 0
 
   -- TODO 2d table?
   for j = 1, height do
@@ -18,7 +18,7 @@ function lovr.load()
       local u = i / width
       local x = (u - .5) * gridSize
       local y = (v - .5) * gridSize + originY
-      local z = -10
+      local z = -2
 
       table.insert(connections, { -1, -1, -1, -1 })
 
@@ -37,7 +37,7 @@ function lovr.load()
         x, y, z,
         x, y, z,
         c1, c2, c3, c4,
-        u, -v
+        .33 + u * .667, -v
       })
     end
   end
@@ -79,7 +79,7 @@ function lovr.load()
     in vec2 TexCoord;
 
     void main() {
-      color = lovrColor; //texture(cloth, TexCoord);
+      color = texture(cloth, TexCoord);
     }
   ]])
 
@@ -92,9 +92,13 @@ function lovr.load()
 
   points = g.newBuffer(format, vertices, 'points')
   points:setDrawMode('points')
-  texture = g.newTexture('water.png')
+  texture = g.newTexture('cloth.jpg')
   points:setTexture(texture)
   g.setShader(renderShader)
+
+  controller = { 0, 0, -1 }
+
+  updateShader:send('rayPosition', controller)
 end
 
 function lovr.update(dt)
@@ -125,24 +129,39 @@ function lovr.update(dt)
   end
   points:setVertices(vertices)
   g.setShader(renderShader)
+
+  t = (t or 0) + dt
+  controller[1] = .5 * math.cos(t)
+  controller[2] = .5 * math.sin(t)
+  if controller[3] > -2 then
+    controller[3] = controller[3] - dt
+  end
+  updateShader:send('rayPosition', controller)
 end
 
 function lovr.draw()
 
+  --[[g.translate(0, 0, -2)
+  g.rotate(math.pi / 2, 0, 1, 0)
+  g.translate(0, 0, 2)]]
+
   -- Draw triangles!
   g.setShader(renderShader)
-  --[[g.setColor(255, 255, 255)
+  g.setColor(255, 255, 255)
   points:setDrawMode('triangles')
   points:setVertexMap(triangleIndices)
-  points:draw()]]
+  points:draw()
 
   -- Clear depth buffer otherwise the points don't show up!
   g.clear(false, true)
 
   -- Draw points!
-  g.setPointSize(4)
+  g.setPointSize(16)
   g.setColor(255, 255, 255)
   points:setDrawMode('points')
   points:setVertexMap()
-  points:draw()
+  --points:draw()
+
+  g.setColor(255, 255, 255)
+  g.cube('fill', controller[1], controller[2], controller[3], .3)
 end
