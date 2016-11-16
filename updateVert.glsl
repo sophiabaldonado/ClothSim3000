@@ -28,13 +28,13 @@ out vec3 tf_prev_position;
 uniform float timestep = 0.05;
 
 // The global spring constant
-uniform float spring = 1;
+uniform float spring = 50;
 
 // Gravity
-uniform vec3 gravity = vec3(0.0, -0.0, 0.0);
+uniform vec3 gravity = vec3(0.0, -0.08, 0.0);
 
 // Global damping constant
-uniform float damping = 0.1;
+uniform float damping = .1;
 
 // Spring resting length
 uniform float rest_length = 1.0;
@@ -82,7 +82,7 @@ void main(void)
     for( int i = 0; i < 4; i++ ) {
         if( connection[i] != -1 ) {
             // q is the position of the other vertex
-            vec3 q = texelFetch(tex_position, connection[i]).xyz;
+            vec3 q = texelFetch(tex_position, connection[i] - 1).xyz;
             vec3 delta = q - pos;
             float point_distance = length(delta);
             F += -spring * (rest_length - point_distance) * normalize(delta);
@@ -92,10 +92,7 @@ void main(void)
 
     // If this is a fixed node, reset force to zero
     if( fixed_node ) {
-        tf_position = position;
-        tf_prev_position = old_position;
         F = vec3(0.0);
-        return;
     }
 
     // Accelleration due to force
@@ -104,6 +101,6 @@ void main(void)
     vec3 displacement = vel * timestep + acc * timestep * timestep;
 
     // Write the outputs
-    tf_prev_position = position;
+    tf_prev_position = pos;
     tf_position = pos + displacement;
 }

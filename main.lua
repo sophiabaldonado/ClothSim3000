@@ -9,7 +9,7 @@ local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and .8 or 0
+  local originY = lovr.headset.isPresent() and .8 or .5
 
   -- TODO 2d table?
   for j = 1, height do
@@ -18,16 +18,18 @@ function lovr.load()
       local u = i / width
       local x = (u - .5) * gridSize
       local y = (v - .5) * gridSize + originY
-      local z = -3
+      local z = -10
 
       table.insert(connections, { -1, -1, -1, -1 })
 
       local n = #connections
       local lastConnection = connections[n]
-      if i ~= 1 then lastConnection[1] = n - 1 end
-      if j ~= 1 then lastConnection[2] = n - width end
-      if i ~= width then lastConnection[3] = n + 1 end
-      if j ~= height then lastConnection[4] = n + width end
+      if j ~= height then
+        if i ~= 1 then lastConnection[1] = n - 1 end
+        if j ~= 1 then lastConnection[2] = n - width end
+        if i ~= width then lastConnection[3] = n + 1 end
+        if j ~= height then lastConnection[4] = n + width end
+      end
 
       local c1, c2, c3, c4 = unpack(lastConnection)
 
@@ -62,9 +64,7 @@ function lovr.load()
 
   tex_position = g.newBuffer(texFormat, #vertices, 'points')
 
-
   updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
-
   renderShader = g.newShader([[
     in vec2 texCoord;
     out vec2 TexCoord;
@@ -75,13 +75,11 @@ function lovr.load()
       gl_Position = lovrProjection * lovrTransform * vec4(position, 1.0);
     }
   ]], [[
-    //uniform sampler2D cloth;
-    uniform samplerBuffer tex_pos;
-    uniform float t;
+    uniform sampler2D cloth;
     in vec2 TexCoord;
 
     void main() {
-      color = vec4(texelFetch(tex_pos, int(t)).xyz + vec3(1.), 1.);//texture(cloth, TexCoord);
+      color = lovrColor; //texture(cloth, TexCoord);
     }
   ]])
 
@@ -97,8 +95,6 @@ function lovr.load()
   texture = g.newTexture('water.png')
   points:setTexture(texture)
   g.setShader(renderShader)
-
-
 end
 
 function lovr.update(dt)
@@ -107,9 +103,6 @@ function lovr.update(dt)
     local p = { unpack(vertices[i], 1, 3) }
     table.insert(positions, p)
   end
-
-  t = (t or 0) + dt
-  renderShader:send('t', t * 15)
 
   tex_position:setVertices(positions)
   local texture = g.newTexture(tex_position)
@@ -123,9 +116,6 @@ function lovr.update(dt)
 
     local vertexIndex = math.floor(i / 6) + 1
     local p = vertices[vertexIndex]
-    if i == 1 then
-      print(x, y, z, p[1], p[2], p[3])
-    end
     vertices[vertexIndex] = {
       x, y, z,
       px, py, pz,
@@ -141,17 +131,17 @@ function lovr.draw()
 
   -- Draw triangles!
   g.setShader(renderShader)
-  g.setColor(128, 0, 255)
+  --[[g.setColor(255, 255, 255)
   points:setDrawMode('triangles')
   points:setVertexMap(triangleIndices)
-  points:draw()
+  points:draw()]]
 
   -- Clear depth buffer otherwise the points don't show up!
   g.clear(false, true)
 
   -- Draw points!
-  g.setPointSize(10)
-  g.setColor(0, 0, 0)
+  g.setPointSize(4)
+  g.setColor(255, 255, 255)
   points:setDrawMode('points')
   points:setVertexMap()
   points:draw()
