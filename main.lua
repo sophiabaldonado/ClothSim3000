@@ -10,33 +10,33 @@ local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and 1 or 0
+  local originY = lovr.headset.isPresent() and 6 or 0
 
   -- TODO 2d table?
   for j = 1, height do
     local v = j / height
     for i = 1, width do
       local u = i / width
-      local x = (u - .5) * gridSize
+      local x = (u - .5) * gridSize / 2
       local y = (v - .5) * gridSize + originY
       local z = 0
 
       table.insert(connections, { -1, -1, -1, -1 })
-      table.insert(crossConnections, { -1, -1, -1, -1 })
+      -- table.insert(crossConnections, { -1, -1, -1, -1 })
 
       local n = #connections
       local lastConnection = connections[n]
-      local lastCrossConnection = crossConnections[n]
+      -- local lastCrossConnection = crossConnections[n]
       if j ~= height then
         if i ~= 1 then lastConnection[1] = n - 1 end
         if j ~= 1 then lastConnection[2] = n - width end
-        if j ~= 1 then lastConnection[1] = n - width - 1 end
-        if j ~= 1 then lastConnection[2] = n - width + 1 end
+        -- if j ~= 1 then lastCrossConnection[1] = n - width - 1 end
+        -- if j ~= 1 then lastCrossConnection[2] = n - width + 1 end
 
-        if i ~= width then lastCrossConnection[3] = n + 1 end
-        if j ~= height then lastCrossConnection[4] = n + width end
-        if j ~= height then lastCrossConnection[3] = n + width - 1 end
-        if j ~= height then lastCrossConnection[4] = n + width + 1 end
+        if i ~= width then lastConnection[3] = n + 1 end
+        if j ~= height then lastConnection[4] = n + width end
+        -- if j ~= height then lastCrossConnection[3] = n + width - 1 end
+        -- if j ~= height then lastCrossConnection[4] = n + width + 1 end
       end
 
       local c1, c2, c3, c4 = unpack(lastConnection)
@@ -72,23 +72,37 @@ function lovr.load()
 
   tex_position = g.newBuffer(texFormat, #vertices, 'points')
 
-  -- updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
+  updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
   renderShader = g.newShader([[
     in vec2 texCoord;
     out vec2 TexCoord;
+    out vec3 Position;
 
     void main() {
       TexCoord = texCoord;
-
+      Position = position;
       gl_Position = lovrProjection * lovrTransform * vec4(position, 1.0);
     }
   ]], [[
     uniform sampler2D cloth;
+    in vec3 Position;
     in vec2 TexCoord;
 
-    void main() {
-      color = texture(cloth, TexCoord);
+    //  Function from Iñigo Quiles
+    //  https://www.shadertoy.com/view/MsS3Wc
+    vec3 hsb2rgb( in vec3 c ){
+        vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                 6.0)-3.0)-1.0,
+                         0.0,
+                         1.0 );
+        rgb = rgb*rgb*(3.0-2.0*rgb);
+        return c.z * mix(vec3(1.0), rgb, c.y);
     }
+
+    void main() {
+      color = texture(cloth, TexCoord) * vec4(hsb2rgb(vec3(abs(TexCoord.x) * 2, 1, .8)), 1);
+    }
+
   ]])
 
   local format = {
@@ -121,7 +135,7 @@ function lovr.update(dt)
   local texture = g.newTexture(tex_position)
   texture:bind()
 
-  updateShader:send('timestep', dt)
+  -- updateShader:send('timestep', dt)
   updateShader:send('rayPosition', { controller:getPosition() })
   updateShader:send('trigger', controller:getAxis('trigger'))
   g.setShader(updateShader)
@@ -157,13 +171,14 @@ function lovr.draw()
   g.clear(false, true)
 
   -- Draw points!
-  g.setPointSize(16)
+  g.setPointSize(30)
   g.setColor(255, 255, 255)
   points:setDrawMode('points')
   points:setVertexMap()
   --points:draw()
 
   local x, y, z = controller:getPosition()
+  local angle, ax, ay, az = controller:getOrientation()
   g.setColor(255, 255, 255)
-  g.cube('line', x, y, z, .2)
+  g.cube('line', x, y, z, .2, -angle, ax, ay, az)
 end
