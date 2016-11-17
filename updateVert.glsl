@@ -9,6 +9,7 @@
 in vec3 previousPosition;	// PREV_POSITION_INDEX
 // This is our connection vector
 in ivec4 connection;          // CONNECTION_INDEX
+in ivec4 crossConnection;          // CONNECTION_INDEX
 
 // This is a TBO that will be bound to the same buffer as the
 // position_mass input attribute
@@ -87,6 +88,14 @@ void main(void)
             float point_distance = length(delta);
             F += -spring * (rest_length - point_distance) * normalize(delta);
             fixed_node = false;
+        }
+        if ( crossConnection[i] != -1 ) {
+          // q is the position of the other vertex
+          vec3 q = texelFetch(tex_position, crossConnection[i] - 1).xyz;
+          vec3 delta = q - pos;
+          float point_distance = length(delta);
+          F += -spring * (rest_length - point_distance) * normalize(delta);
+          fixed_node = false;
         }
     }
 

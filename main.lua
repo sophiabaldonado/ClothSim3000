@@ -21,14 +21,21 @@ function lovr.load()
       local z = 0
 
       table.insert(connections, { -1, -1, -1, -1 })
+      table.insert(crossConnections, { -1, -1, -1, -1 })
 
       local n = #connections
       local lastConnection = connections[n]
+      local lastCrossConnection = crossConnections[n]
       if j ~= height then
         if i ~= 1 then lastConnection[1] = n - 1 end
         if j ~= 1 then lastConnection[2] = n - width end
-        if i ~= width then lastConnection[3] = n + 1 end
-        if j ~= height then lastConnection[4] = n + width end
+        if j ~= 1 then lastConnection[1] = n - width - 1 end
+        if j ~= 1 then lastConnection[2] = n - width + 1 end
+
+        if i ~= width then lastCrossConnection[3] = n + 1 end
+        if j ~= height then lastCrossConnection[4] = n + width end
+        if j ~= height then lastCrossConnection[3] = n + width - 1 end
+        if j ~= height then lastCrossConnection[4] = n + width + 1 end
       end
 
       local c1, c2, c3, c4 = unpack(lastConnection)
