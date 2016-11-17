@@ -4,6 +4,7 @@ local height = 50
 local vertices = {}
 local previousPositions = {}
 local connections = {}
+local crossConnections = {}
 local triangleIndices = {}
 local points
 
@@ -71,7 +72,7 @@ function lovr.load()
 
   tex_position = g.newBuffer(texFormat, #vertices, 'points')
 
-  updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
+  -- updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
   renderShader = g.newShader([[
     in vec2 texCoord;
     out vec2 TexCoord;
