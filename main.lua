@@ -1,13 +1,13 @@
 local g = lovr.graphics
 local width = 25
-local height = 25
+local height = 15
 local vertices = {}
 local triangleIndices = {}
 local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and 4.5 or 0
+  local originY = lovr.headset.isPresent() and 2 or 0
 
   local positions = {}
   for j = 1, height do
