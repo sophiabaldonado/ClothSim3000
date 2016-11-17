@@ -27,10 +27,10 @@ uniform float timestep = .05;
 uniform float spring = 40;
 
 // Gravity
-uniform vec3 gravity = vec3(0.0, -0.02, 0.0);
+uniform vec3 gravity = vec3(0.0, -0.03, 0.0);
 
 // Global damping constant
-uniform float damping = .995;
+uniform float damping = .975;
 
 // Spring resting length
 uniform float rest_length = .035;
@@ -40,7 +40,7 @@ vec3 calcRayIntersection(vec3 pos) {
     vec3 center = rayPosition;
     vec3 moveDirection = (pos - center);
     float l = length(moveDirection);
-    float radius = 0.2;
+    float radius = 0.3;
 
     if (l < radius) {  // see if the pos is in the sphere
         retPos = (pos + normalize(moveDirection) * (radius - l) );

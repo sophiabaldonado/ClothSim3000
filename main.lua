@@ -7,7 +7,7 @@ local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and 4 or 0
+  local originY = lovr.headset.isPresent() and 4.5 or 0
 
   local positions = {}
   for j = 1, height do
@@ -86,7 +86,7 @@ function lovr.update(dt)
   points:setDrawMode('points')
   points:setVertexMap()
 
-  for _ = 1, 1 do
+  for _ = 1, 2 do
     local data = points:feedback()
     local positions = {}
     for i = 1, #data, 6 do
@@ -117,7 +117,7 @@ function lovr.draw()
   local x, y, z = controller:getPosition()
   local angle, ax, ay, az = controller:getOrientation()
   g.setColor(255, 255, 255)
-  g.cube('line', x, y, z, .2, -angle, ax, ay, az)
+  g.cube('line', x, y, z, .3, -angle + math.pi / 4, ax, ay, az)
 
   -- Draw triangles!
   g.setShader(renderShader)
