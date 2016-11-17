@@ -64,6 +64,7 @@ void main() {
 
     vec3 old_position = previousPosition; // save the previous position
     vec3 vel = (pos - old_position) * damping;  // calculate velocity using current & prev position
+    vel *= 1 - trigger;
     vec3 F = gravity * mass - vel * damping;    // F is the force on the mass
 
     for (int i = 0; i < 4; i++) {

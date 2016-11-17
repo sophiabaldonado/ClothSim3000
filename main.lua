@@ -80,13 +80,13 @@ function lovr.update(dt)
   t = t + dt
   g.setShader(updateShader)
   --updateShader:send('t', t)
-  --updateShader:send('trigger', controller:getAxis('trigger'))
-  updateShader:send('rayPosition', { controller:getPosition() })
+  updateShader:send('trigger', controller:getAxis('trigger'))
 
   points:setDrawMode('points')
   points:setVertexMap()
 
   for _ = 1, 2 do
+    updateShader:send('rayPosition', { controller:getPosition() })
     local data = points:feedback()
     local positions = {}
     for i = 1, #data, 6 do
@@ -117,7 +117,7 @@ function lovr.draw()
   local x, y, z = controller:getPosition()
   local angle, ax, ay, az = controller:getOrientation()
   g.setColor(255, 255, 255)
-  g.cube('line', x, y, z, .3, -angle + math.pi / 4, ax, ay, az)
+  g.cube('line', x, y, z, .3, -angle, ax, ay, az)
 
   -- Draw triangles!
   g.setShader(renderShader)
