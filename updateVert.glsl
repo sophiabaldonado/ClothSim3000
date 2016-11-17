@@ -5,7 +5,6 @@
 in vec3 previousPosition;	// PREV_POSITION_INDEX
 // This is our connection vector
 in ivec4 connection;          // CONNECTION_INDEX
-// in ivec4 crossConnection;          // CONNECTION_INDEX
 
 // This is a TBO that will be bound to the same buffer as the
 // position_mass input attribute
@@ -36,36 +35,23 @@ uniform float damping = .995;
 // Spring resting length
 uniform float rest_length = .035;
 
-vec3 calcRayIntersection( vec3 pos )
-{   // this is for pinching/pulling on cloth with trigger
+vec3 calcRayIntersection(vec3 pos) {
     vec3 retPos = pos;
-    if (trigger > 0.2) {
-        if (rayPosition.x > pos.x - 0.07 &&
-            rayPosition.x < pos.x + 0.07 &&
-            rayPosition.y > pos.y - 0.07 &&
-            rayPosition.y < pos.y + 0.07 &&
-            rayPosition.z > pos.z - 0.8 &&
-            rayPosition.z < pos.z + 0.8 &&
-            connection[0] != -1 && connection[1] != -1 &&
-            connection[2] != -1 && connection[3] != -1) {
-            retPos = vec3(rayPosition.x, rayPosition.y, rayPosition.z);
-        }
-    } else {
+    vec3 center = rayPosition;
+    vec3 moveDirection = (pos - center);
+    float l = length(moveDirection);
+    float radius = 0.2;
 
-        vec3 center = rayPosition;
-        vec3 moveDirection = (pos - center);
-        float l = length(moveDirection);
-        float radius = 0.3;
-
-        if (l < radius) {  // see if the pos is in the sphere
-            retPos = (pos + normalize(moveDirection) * (radius - l) );
-        }
+    if (l < radius) {  // see if the pos is in the sphere
+        retPos = (pos + normalize(moveDirection) * (radius - l) );
     }
+
     return retPos;
 }
 
-void main(void)
-{
+void main() {
+
+    // Don't do anything if I'm a boring fixed node
     if (connection == vec4(-1)) {
         tf_prev_position = position;
         tf_position = position;
@@ -74,11 +60,10 @@ void main(void)
 
     vec3 pos = position;               // pos can be our position
     pos = calcRayIntersection( pos );
-    float mass = 7;               // the mass of our vertex, right now is always 1
+    float mass = 20;               // the mass of our vertex, right now is always 1
 
     vec3 old_position = previousPosition; // save the previous position
     vec3 vel = (pos - old_position) * damping;  // calculate velocity using current & prev position
-
     vec3 F = gravity * mass - vel * damping;    // F is the force on the mass
 
     for (int i = 0; i < 4; i++) {
@@ -91,13 +76,8 @@ void main(void)
         }
     }
 
-    // Wind
-    F += vec3(0, 0, sin(t + pos.y + pos.x * 4) / 12 * pow(abs(cos(t / 5)), 6));
-
     vec3 acc = F / mass;
-    // Displacement
     vec3 displacement = vel + acc * timestep * timestep;
-    //displacement = clamp(displacement, vec3(-.01), vec3(.01));
 
     // Write the outputs
     tf_prev_position = pos;

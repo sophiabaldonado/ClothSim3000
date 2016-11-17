@@ -1,5 +1,5 @@
 local g = lovr.graphics
-local width = 50
+local width = 25
 local height = 25
 local vertices = {}
 local triangleIndices = {}
@@ -7,7 +7,7 @@ local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and 2 or 0
+  local originY = lovr.headset.isPresent() and 4 or 0
 
   local positions = {}
   for j = 1, height do
@@ -70,7 +70,8 @@ function lovr.load()
   points = g.newBuffer(format, vertices)
   texture = g.newTexture('cloth.jpg')
   points:setTexture(texture)
-  controller = lovr.headset.getController('left')
+  left, right = lovr.headset.getController('left'), lovr.headset.getController('right')
+  controller = left:isPresent() and left or right
   g.setBackgroundColor(20, 20, 20)
   t = 0
 end
@@ -78,28 +79,31 @@ end
 function lovr.update(dt)
   t = t + dt
   g.setShader(updateShader)
-  updateShader:send('t', t)
+  --updateShader:send('t', t)
+  --updateShader:send('trigger', controller:getAxis('trigger'))
   updateShader:send('rayPosition', { controller:getPosition() })
-  updateShader:send('trigger', controller:getAxis('trigger'))
 
   points:setDrawMode('points')
   points:setVertexMap()
-  local data = points:feedback()
-  local positions = {}
-  for i = 1, #data, 6 do
-    local x, y, z, px, py, pz = unpack(data, i, i + 5)
-    local vertexIndex = math.ceil(i / 6)
-    local c1, c2, c3, c4, u, v = unpack(vertices[vertexIndex], 7, 12)
-    vertices[vertexIndex] = {
-      x, y, z,
-      px, py, pz,
-      c1, c2, c3, c4, u, v
-    }
-    table.insert(positions, { x, y, z })
+
+  for _ = 1, 1 do
+    local data = points:feedback()
+    local positions = {}
+    for i = 1, #data, 6 do
+      local x, y, z, px, py, pz = unpack(data, i, i + 5)
+      local vertexIndex = math.ceil(i / 6)
+      local c1, c2, c3, c4, u, v = unpack(vertices[vertexIndex], 7, 12)
+      vertices[vertexIndex] = {
+        x, y, z,
+        px, py, pz,
+        c1, c2, c3, c4, u, v
+      }
+      table.insert(positions, { x, y, z })
+    end
+    points:setVertices(vertices)
+    positionBuffer:setVertices(positions)
+    bufferTexture:refresh()
   end
-  points:setVertices(vertices)
-  positionBuffer:setVertices(positions)
-  bufferTexture:refresh()
 end
 
 function lovr.draw()
@@ -113,7 +117,7 @@ function lovr.draw()
   local x, y, z = controller:getPosition()
   local angle, ax, ay, az = controller:getOrientation()
   g.setColor(255, 255, 255)
-  g.cube('line', x, y, z, .3, -angle, ax, ay, az)
+  g.cube('line', x, y, z, .2, -angle, ax, ay, az)
 
   -- Draw triangles!
   g.setShader(renderShader)
