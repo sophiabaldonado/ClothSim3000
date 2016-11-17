@@ -1,13 +1,13 @@
 local g = lovr.graphics
 local width = 50
-local height = 50
+local height = 25
 local vertices = {}
 local triangleIndices = {}
 local points
 
 function lovr.load()
   local gridSize = lovr.headset.isPresent() and 2 or 2
-  local originY = lovr.headset.isPresent() and 6 or 0
+  local originY = lovr.headset.isPresent() and 2 or 0
 
   local positions = {}
   for j = 1, height do
@@ -55,37 +55,7 @@ function lovr.load()
   end
 
   updateShader = g.newShader('updateVert.glsl', nil, { 'tf_position', 'tf_prev_position' })
-  renderShader = g.newShader([[
-    in vec2 texCoord;
-    out vec2 TexCoord;
-    out vec3 Position;
-
-    void main() {
-      TexCoord = texCoord;
-      Position = position;
-      gl_Position = lovrProjection * lovrTransform * vec4(position, 1.0);
-    }
-  ]], [[
-    uniform sampler2D cloth;
-    uniform float t;
-    in vec3 Position;
-    in vec2 TexCoord;
-
-    //  Function from Iñigo Quiles
-    //  https://www.shadertoy.com/view/MsS3Wc
-    vec3 hsb2rgb( in vec3 c ){
-        vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
-                                 6.0)-3.0)-1.0,
-                         0.0,
-                         1.0 );
-        rgb = rgb*rgb*(3.0-2.0*rgb);
-        return c.z * mix(vec3(1.0), rgb, c.y);
-    }
-
-    void main() {
-      color = texture(cloth, TexCoord) * vec4(hsb2rgb(vec3(abs(TexCoord.x) * 2, 1, .9)), 1);
-    }
-  ]])
+  renderShader = g.newShader('renderVert.glsl', 'renderFrag.glsl')
 
   positionBuffer = g.newBuffer({{ 'position', 'float', 3 }}, positions, 'points')
   bufferTexture = g.newTexture(positionBuffer)
@@ -107,11 +77,11 @@ end
 
 function lovr.update(dt)
   t = t + dt
+  g.setShader(updateShader)
   updateShader:send('t', t)
   updateShader:send('rayPosition', { controller:getPosition() })
   updateShader:send('trigger', controller:getAxis('trigger'))
 
-  g.setShader(updateShader)
   points:setDrawMode('points')
   points:setVertexMap()
   local data = points:feedback()

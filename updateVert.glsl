@@ -66,6 +66,12 @@ vec3 calcRayIntersection( vec3 pos )
 
 void main(void)
 {
+    if (connection == vec4(-1)) {
+        tf_prev_position = position;
+        tf_position = position;
+        return;
+    }
+
     vec3 pos = position;               // pos can be our position
     pos = calcRayIntersection( pos );
     float mass = 7;               // the mass of our vertex, right now is always 1
@@ -74,7 +80,6 @@ void main(void)
     vec3 vel = (pos - old_position) * damping;  // calculate velocity using current & prev position
 
     vec3 F = gravity * mass - vel * damping;    // F is the force on the mass
-    bool fixed_node = true;                     // Becomes false when force is applied
 
     for (int i = 0; i < 4; i++) {
         if( connection[i] != -1 ) {
@@ -83,17 +88,11 @@ void main(void)
             vec3 delta = q - pos;
             float point_distance = length(delta);
             F += -spring * (rest_length - point_distance) * normalize(delta);
-            fixed_node = false;
         }
     }
 
     // Wind
     F += vec3(0, 0, sin(t + pos.y + pos.x * 4) / 12 * pow(abs(cos(t / 5)), 6));
-
-    // If this is a fixed node, reset force to zero
-    if( fixed_node ) {
-        F = vec3(0.0);
-    }
 
     vec3 acc = F / mass;
     // Displacement
