@@ -1,7 +1,3 @@
-// Update Vertex Shader
-// OpenGL SuperBible Chapter 7
-// Graham Sellers
-
 // This input vector contains the vertex position in xyz, and the
 // mass of the vertex in w
 //in vec4 position;        // POSITION_INDEX
@@ -16,7 +12,7 @@ in ivec4 connection;          // CONNECTION_INDEX
 uniform samplerBuffer tex_position;
 
 uniform vec3 rayPosition;
-//uniform float ciElapsedSeconds;
+uniform float t;
 
 // Holding trigger on Vive controller or right mouse click
 uniform float trigger;
@@ -80,7 +76,7 @@ void main(void)
     vec3 F = gravity * mass - vel * damping;    // F is the force on the mass
     bool fixed_node = true;                     // Becomes false when force is applied
 
-    for( int i = 0; i < 4; i++ ) {
+    for (int i = 0; i < 4; i++) {
         if( connection[i] != -1 ) {
             // q is the position of the other vertex
             vec3 q = texelFetch(tex_position, connection[i] - 1).xyz;
@@ -89,22 +85,16 @@ void main(void)
             F += -spring * (rest_length - point_distance) * normalize(delta);
             fixed_node = false;
         }
-        // if ( crossConnection[i] != -1 ) {
-        //   // q is the position of the other vertex
-        //   vec3 q = texelFetch(tex_position, crossConnection[i] - 1).xyz;
-        //   vec3 delta = q - pos;
-        //   float point_distance = length(delta);
-        //   F += -spring * (rest_length - point_distance) * normalize(delta);
-        //   fixed_node = false;
-        // }
     }
+
+    // Wind
+    F += vec3(0, 0, sin(t + pos.y + pos.x * 4) / 12 * pow(abs(cos(t / 5)), 6));
 
     // If this is a fixed node, reset force to zero
     if( fixed_node ) {
         F = vec3(0.0);
     }
 
-    // Accelleration due to force
     vec3 acc = F / mass;
     // Displacement
     vec3 displacement = vel + acc * timestep * timestep;
