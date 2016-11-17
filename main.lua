@@ -8,7 +8,7 @@ local triangleIndices = {}
 local points
 
 function lovr.load()
-  local gridSize = lovr.headset.isPresent() and .2 or 2
+  local gridSize = lovr.headset.isPresent() and 2 or 2
   local originY = lovr.headset.isPresent() and 1 or 0
 
   -- TODO 2d table?
