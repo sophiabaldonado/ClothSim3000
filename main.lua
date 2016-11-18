@@ -31,7 +31,7 @@ function lovr.load()
         x, y, z,
         x, y, z,
         c1, c2, c3, c4,
-        .33 + u * .667, -v
+        u, -v * 1.3
       })
 
       table.insert(positions, { x, y, z })
@@ -67,26 +67,33 @@ function lovr.load()
     { 'texCoord', 'float', 2 }
   }
 
+  -- Skybox
+  sides = { 'right.jpg', 'left.jpg', 'top.jpg', 'bottom.jpg', 'front.jpg', 'back.jpg' }
+  skybox = lovr.graphics.newSkybox(sides)
+
+
   points = g.newBuffer(format, vertices)
-  texture = g.newTexture('cloth.jpg')
+  texture = g.newTexture('canvas.jpg')
   points:setTexture(texture)
-  left, right = lovr.headset.getController('left'), lovr.headset.getController('right')
-  controller = left:isPresent() and left or right
+  leftController, rightController = lovr.headset.getController('left'), lovr.headset.getController('right')
   g.setBackgroundColor(20, 20, 20)
   t = 0
 end
 
 function lovr.update(dt)
   t = t + dt
+  local trigger = math.max(leftController:getAxis('trigger'), rightController:getAxis('trigger'))
+  -- renderShader:send('t', t)
   g.setShader(updateShader)
-  --updateShader:send('t', t)
-  updateShader:send('trigger', controller:getAxis('trigger'))
+  updateShader:send('trigger', trigger)
 
   points:setDrawMode('points')
   points:setVertexMap()
 
   for _ = 1, 2 do
-    updateShader:send('rayPosition', { controller:getPosition() })
+    updateShader:send('leftRayPosition', { leftController:getPosition() })
+    updateShader:send('rightRayPosition', { rightController:getPosition() })
+    updateShader:send('headRayPosition', { lovr.headset:getPosition() })
     local data = points:feedback()
     local positions = {}
     for i = 1, #data, 6 do
@@ -114,10 +121,15 @@ function lovr.draw()
   g.plane('fill', 0, 0, 0, 5)
 
   -- "Controller"
-  local x, y, z = controller:getPosition()
-  local angle, ax, ay, az = controller:getOrientation()
+  local lx, ly, lz = leftController:getPosition()
+  local langle, lax, lay, laz = leftController:getOrientation()
   g.setColor(255, 255, 255)
-  g.cube('line', x, y, z, .3, -angle, ax, ay, az)
+  g.cube('line', lx, ly, lz, .2, -langle, lax, lay, laz)
+
+  local rx, ry, rz = rightController:getPosition()
+  local rangle, rax, ray, raz = rightController:getOrientation()
+  g.setColor(255, 255, 255)
+  g.cube('line', rx, ry, rz, .2, -rangle, rax, ray, raz)
 
   -- Draw triangles!
   g.setShader(renderShader)

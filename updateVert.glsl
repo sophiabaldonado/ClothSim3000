@@ -10,8 +10,9 @@ in ivec4 connection;          // CONNECTION_INDEX
 // position_mass input attribute
 uniform samplerBuffer tex_position;
 
-uniform vec3 rayPosition;
-uniform float t;
+uniform vec3 leftRayPosition;
+uniform vec3 rightRayPosition;
+uniform vec3 headRayPosition;
 
 // Holding trigger on Vive controller or right mouse click
 uniform float trigger;
@@ -37,13 +38,23 @@ uniform float rest_length = .035;
 
 vec3 calcRayIntersection(vec3 pos) {
     vec3 retPos = pos;
-    vec3 center = rayPosition;
-    vec3 moveDirection = (pos - center);
-    float l = length(moveDirection);
+    vec3 lCenter = leftRayPosition;
+    vec3 rCenter = rightRayPosition;
+    vec3 hCenter = headRayPosition;
+    vec3 lMoveDirection = (pos - lCenter);
+    vec3 rMoveDirection = (pos - rCenter);
+    vec3 hMoveDirection = (pos - hCenter);
+    float l = length(lMoveDirection);
+    float r = length(rMoveDirection);
+    float h = length(hMoveDirection);
     float radius = 0.3;
 
     if (l < radius) {  // see if the pos is in the sphere
-        retPos = (pos + normalize(moveDirection) * (radius - l) );
+        retPos = (pos + normalize(lMoveDirection) * (radius - l));
+    } else if (r < radius) {  // see if the pos is in the sphere
+        retPos = (pos + normalize(rMoveDirection) * (radius - r));
+    } else if (h < radius) {
+        retPos = (pos + normalize(hMoveDirection) * (radius - h));
     }
 
     return retPos;

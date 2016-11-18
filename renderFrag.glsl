@@ -15,5 +15,5 @@ vec3 hsb2rgb( in vec3 c ){
 }
 
 void main() {
-  color = texture(cloth, TexCoord) * vec4(hsb2rgb(vec3(abs(TexCoord.x) * 2, 1, .9)), 1);
+  color = texture(cloth, TexCoord) * vec4(hsb2rgb(vec3(abs(TexCoord.x), 1, .9)), 1);
 }
