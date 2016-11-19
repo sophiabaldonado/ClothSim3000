@@ -67,11 +67,6 @@ function lovr.load()
     { 'texCoord', 'float', 2 }
   }
 
-  -- Skybox
-  sides = { 'right.jpg', 'left.jpg', 'top.jpg', 'bottom.jpg', 'front.jpg', 'back.jpg' }
-  skybox = lovr.graphics.newSkybox(sides)
-
-
   points = g.newBuffer(format, vertices)
   texture = g.newTexture('canvas.jpg')
   points:setTexture(texture)
